@@ -139,6 +139,10 @@ function holeCardsUsed(
   return used;
 }
 
+function article(rank: Rank): string {
+  return rank === "A" || rank === "8" ? "an" : "a";
+}
+
 function describeHand(rh: RankedHand): string {
   const r = rh.cards.map((c) => c.rank);
   const s = rh.cards.map((c) => c.suit);
@@ -147,15 +151,15 @@ function describeHand(rh: RankedHand): string {
     case "Royal Flush":
       return `a royal flush in ${SUIT_NAME[s[0]]}`;
     case "Straight Flush":
-      return `a ${RANK_NAME[r[0]]}-high straight flush`;
+      return `${article(r[0])} ${RANK_NAME[r[0]]}-high straight flush`;
     case "Four of a Kind":
       return `four ${RANK_PLURAL[r[0]]}`;
     case "Full House":
       return `${RANK_PLURAL[r[0]]} full of ${RANK_PLURAL[r[3]]}`;
     case "Flush":
-      return `a ${RANK_NAME[r[0]]}-high flush in ${SUIT_NAME[s[0]]}`;
+      return `${article(r[0])} ${RANK_NAME[r[0]]}-high flush in ${SUIT_NAME[s[0]]}`;
     case "Straight":
-      return `a ${RANK_NAME[r[0]]}-high straight`;
+      return `${article(r[0])} ${RANK_NAME[r[0]]}-high straight`;
     case "Three of a Kind":
       return `three ${RANK_PLURAL[r[0]]}`;
     case "Two Pair":

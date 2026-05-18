@@ -40,6 +40,10 @@ export default function ShowdownPage() {
       router.replace("/");
       return;
     }
+    if (currentHand.street !== "showdown") {
+      router.replace("/hand");
+      return;
+    }
     if (!pendingShowdown) {
       initShowdown();
     }
@@ -160,7 +164,7 @@ export default function ShowdownPage() {
           ◆ Reveal
         </p>
         <h1 className="font-display text-cream text-[34px] leading-[1.1] tracking-tight mb-1">
-          Who&apos;s <em className="text-coral not-italic">still in?</em>
+          Who&apos;s <em className="text-coral italic">still in?</em>
         </h1>
         <p className="font-sans text-sm text-cream-dim">
           Tap each player&apos;s hole cards and the board to see who wins.

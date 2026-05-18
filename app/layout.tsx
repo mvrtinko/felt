@@ -29,10 +29,18 @@ export const metadata: Metadata = {
   description:
     "Position tracker, action flow, and showdown referee for home poker games.",
   manifest: "/manifest.json",
+  applicationName: "Felt",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Felt",
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
 };
 

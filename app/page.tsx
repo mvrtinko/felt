@@ -90,7 +90,7 @@ export default function SetupPage() {
           ◆ New night
         </p>
         <h1 className="font-display text-cream text-[40px] leading-[1.1] tracking-tight">
-          Who&apos;s <em className="text-coral not-italic">playing?</em>
+          Who&apos;s <em className="text-coral italic">playing?</em>
         </h1>
       </div>
 

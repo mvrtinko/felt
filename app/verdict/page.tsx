@@ -49,11 +49,11 @@ export default function VerdictPage() {
       router.replace("/");
       return;
     }
-    if (!pendingShowdown) {
-      router.replace("/showdown");
+    if (currentHand.street !== "showdown") {
+      router.replace("/hand");
       return;
     }
-    if (!evalInput) {
+    if (!pendingShowdown || !evalInput) {
       router.replace("/showdown");
       return;
     }
@@ -129,11 +129,11 @@ export default function VerdictPage() {
           {isSplit ? (
             <>
               Split pot:{" "}
-              <em className="text-coral not-italic">{titleNames}</em>
+              <em className="text-coral italic">{titleNames}</em>
             </>
           ) : (
             <>
-              <em className="text-coral not-italic">{titleNames}</em>{" "}
+              <em className="text-coral italic">{titleNames}</em>{" "}
               <span className="text-cream">takes it.</span>
             </>
           )}

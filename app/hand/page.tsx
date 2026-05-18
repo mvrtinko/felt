@@ -166,11 +166,14 @@ export default function HandPage() {
     players.length,
   );
 
-  const subline = checkOk
-    ? "no bet · option"
-    : toCallNum > 0
-      ? `${toCallNum} to call`
-      : "no bet";
+  const subline =
+    currentHand.street === "preflop" && checkOk
+      ? "your option"
+      : checkOk
+        ? "no bet"
+        : toCallNum > 0
+          ? `${toCallNum} to call`
+          : "no bet";
 
   function handleAction(action: ActionType) {
     if (!actor) return;
@@ -194,13 +197,13 @@ export default function HandPage() {
         </span>
       </header>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
           key={`${currentHand.street}-${currentHand.currentActorIndex}-${currentHand.actions.length}`}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.18 }}
+          transition={{ duration: 0.16 }}
           className="rounded-2xl border border-coral coral-glow bg-coral-glow px-5 py-5 mb-5"
         >
           <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-coral mb-2">
