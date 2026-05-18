@@ -1,26 +1,86 @@
 @import "tailwindcss";
 
+@theme {
+  --color-felt: #0d2818;
+  --color-felt-deep: #081810;
+  --color-felt-light: #143524;
+
+  --color-coral: #e94560;
+  --color-coral-glow: rgba(233, 69, 96, 0.15);
+
+  --color-cream: #f4ede0;
+  --color-cream-dim: #c9c0b0;
+
+  --color-gold: #c9a96e;
+  --color-ink: #0a0a0a;
+
+  --color-line: rgba(244, 237, 224, 0.08);
+  --color-line-strong: rgba(244, 237, 224, 0.15);
+
+  --color-chip-red: #c0392b;
+  --color-chip-blue: #2e5f8e;
+  --color-chip-green: #1e6b3e;
+  --color-chip-white: #ecf0f1;
+
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base: #0a0f0b;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background:
+    radial-gradient(ellipse 80% 60% at 0% 0%, rgba(233, 69, 96, 0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 80% 60% at 100% 100%, rgba(201, 169, 110, 0.04) 0%, transparent 60%),
+    var(--bg-base);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  .font-sans {
+    font-family: var(--font-sans);
+  }
+
+  .coral-glow {
+    box-shadow: 0 0 24px 0 var(--color-coral-glow);
+  }
+
+  .no-tap-highlight {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
