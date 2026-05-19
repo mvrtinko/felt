@@ -1,12 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { ArrowRight, Undo2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Undo2, Trophy } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Frame } from "../components/Frame";
 import { Logo } from "../components/Logo";
 import { PlayerAvatar } from "../components/PlayerAvatar";
+import { WinnerPickerSheet } from "../components/WinnerPickerSheet";
 import { useHasMounted } from "../hooks/useHasMounted";
 import { useGameStore } from "@/lib/store";
 import {
@@ -18,6 +19,7 @@ import {
   getPosition,
   getPositionLabel,
 } from "@/lib/positions";
+import { computeBlinds, formatMs, formatStake } from "@/lib/blinds";
 import type { ActionType, Position, Street } from "@/lib/types";
 
 const STREET_LABEL: Record<Street, string> = {
@@ -39,11 +41,28 @@ export default function HandPage() {
   const router = useRouter();
   const players = useGameStore((s) => s.players);
   const currentHand = useGameStore((s) => s.currentHand);
+  const blindsConfig = useGameStore((s) => s.blinds);
   const recordAction = useGameStore((s) => s.recordAction);
   const undoLastAction = useGameStore((s) => s.undoLastAction);
   const goToShowdown = useGameStore((s) => s.goToShowdown);
   const initShowdown = useGameStore((s) => s.initShowdown);
   const startNextHand = useGameStore((s) => s.startNextHand);
+  const declareWinner = useGameStore((s) => s.declareWinner);
+  const pauseBlinds = useGameStore((s) => s.pauseBlinds);
+  const resumeBlinds = useGameStore((s) => s.resumeBlinds);
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const blinds = useMemo(
+    () => computeBlinds(blindsConfig, now),
+    [blindsConfig, now],
+  );
+
+  const [winnerSheetOpen, setWinnerSheetOpen] = useState(false);
 
   useEffect(() => {
     if (mounted && (!currentHand || players.length < 2)) {
@@ -83,6 +102,7 @@ export default function HandPage() {
     const winner = players.find(
       (p) => p.id === currentHand.winnerPlayerId,
     );
+    const isFoldOut = stillInCount === 1;
     return (
       <Frame>
         <header className="flex items-center justify-between mb-12">
@@ -106,7 +126,9 @@ export default function HandPage() {
                 {winner.name} takes it.
               </h1>
               <p className="font-sans text-sm text-cream-dim max-w-xs">
-                Won by default. Everyone else folded.
+                {isFoldOut
+                  ? "Won by default. Everyone else folded."
+                  : "Awarded by table call — no cards needed."}
               </p>
             </>
           ) : null}
@@ -159,21 +181,23 @@ export default function HandPage() {
 
   const checkOk = isCheckAllowed(currentHand, players);
   const callOk = isCallAllowed(currentHand, players);
-  const toCallNum = currentHand.raisesThisStreet;
   const actorPosLabel = getPositionLabel(
     currentHand.currentActorIndex,
     currentHand.dealerSeat,
     players.length,
   );
 
-  const subline =
-    currentHand.street === "preflop" && checkOk
-      ? "your option"
-      : checkOk
-        ? "no bet"
-        : toCallNum > 0
-          ? `${toCallNum} to call`
-          : "no bet";
+  const subline = (() => {
+    if (currentHand.street === "preflop") {
+      if (checkOk) return "your option";
+      if (currentHand.raisesThisStreet <= 1) return `${blinds.bb} to call`;
+      if (currentHand.raisesThisStreet === 2) return "raised — to call";
+      return `${currentHand.raisesThisStreet}-bet — to call`;
+    }
+    if (checkOk) return "no bet";
+    if (currentHand.raisesThisStreet === 1) return "bet — to call";
+    return `${currentHand.raisesThisStreet}-bet — to call`;
+  })();
 
   function handleAction(action: ActionType) {
     if (!actor) return;
@@ -187,7 +211,7 @@ export default function HandPage() {
 
   return (
     <Frame>
-      <header className="flex items-center justify-between mb-6">
+      <header className="flex items-center justify-between mb-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-cream-dim">
           Hand · {handNumStr}
         </p>
@@ -196,6 +220,38 @@ export default function HandPage() {
           {STREET_LABEL[currentHand.street]}
         </span>
       </header>
+
+      <button
+        type="button"
+        onClick={() => (blinds.paused ? resumeBlinds() : pauseBlinds())}
+        className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl border ${
+          blinds.paused
+            ? "border-gold/40 bg-gold/10"
+            : "border-line-strong bg-felt/30"
+        } mb-5 transition-colors`}
+        aria-label={blinds.paused ? "Resume blinds timer" : "Pause blinds timer"}
+      >
+        <span className="flex items-center gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-cream-dim">
+            Blinds
+          </span>
+          <span className="font-display italic text-cream text-base leading-none">
+            {formatStake(blinds.sb)}/{formatStake(blinds.bb)}
+          </span>
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-cream-dim">
+            Lv {blinds.level + 1}
+          </span>
+        </span>
+        <span
+          className={`font-mono text-sm tabular-nums ${
+            blinds.paused ? "text-gold" : "text-cream"
+          }`}
+        >
+          {blinds.paused
+            ? "PAUSED"
+            : formatMs(blinds.msRemainingInLevel)}
+        </span>
+      </button>
 
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
@@ -322,7 +378,7 @@ export default function HandPage() {
         />
       </div>
 
-      <div className="flex items-center justify-between mt-auto pt-2">
+      <div className="flex items-center justify-between gap-2 mt-auto pt-2">
         <button
           onClick={() => undoLastAction()}
           disabled={currentHand.actions.length === 0}
@@ -331,19 +387,39 @@ export default function HandPage() {
           <Undo2 size={14} />
           Undo last
         </button>
-        <button
-          onClick={() => {
-            goToShowdown();
-            initShowdown();
-            router.push("/showdown");
-          }}
-          disabled={!canShowdown}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-full text-gold hover:opacity-80 font-mono text-[11px] uppercase tracking-[0.18em] disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          Showdown
-          <ArrowRight size={14} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setWinnerSheetOpen(true)}
+            disabled={stillInCount < 2}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-cream hover:opacity-80 font-mono text-[11px] uppercase tracking-[0.18em] disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            <Trophy size={14} />
+            Winner
+          </button>
+          <button
+            onClick={() => {
+              goToShowdown();
+              initShowdown();
+              router.push("/showdown");
+            }}
+            disabled={!canShowdown}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-full text-gold hover:opacity-80 font-mono text-[11px] uppercase tracking-[0.18em] disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Showdown
+            <ArrowRight size={14} />
+          </button>
+        </div>
       </div>
+
+      <WinnerPickerSheet
+        open={winnerSheetOpen}
+        players={players.filter((p) => !foldedSet.has(p.id))}
+        onPick={(winnerId) => {
+          declareWinner(winnerId);
+          setWinnerSheetOpen(false);
+        }}
+        onClose={() => setWinnerSheetOpen(false)}
+      />
     </Frame>
   );
 }
